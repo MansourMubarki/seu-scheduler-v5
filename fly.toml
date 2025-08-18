@@ -1,4 +1,4 @@
-app = "seu-scheduler"
+app = "seu-scheduler-5"
 primary_region = "ams"
 
 [env]
