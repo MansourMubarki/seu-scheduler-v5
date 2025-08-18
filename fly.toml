@@ -1,4 +1,4 @@
-app = "seu-scheduler-5"
+app = "seu-scheduler-v5"
 primary_region = "ams"
 
 [env]
@@ -6,13 +6,13 @@ primary_region = "ams"
   DB_PATH = "/data/app.db"
 
 [[mounts]]
-  source = "vol_rk1y6dgp5p7ekly4"        # اسم الـ volume (وليس الـ ID)
+  source = "data"        # اسم الـ volume (وليس الـ ID)
   destination = "/data"
 
 [http_service]
   internal_port = 8080
   force_https = true
   auto_start_machines = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = true
   min_machines_running = 1
   processes = ["app"]
