@@ -6,7 +6,7 @@ primary_region = "ams"
   DB_PATH = "/data/app.db"
 
 [[mounts]]
-  source = "data2"        # اسم الـ volume (وليس الـ ID)
+  source = "data"        # اسم الـ volume (وليس الـ ID)
   destination = "/data"
 
 [http_service]
