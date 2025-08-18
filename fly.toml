@@ -1,0 +1,18 @@
+app = "seu-scheduler"
+primary_region = "fra"
+
+[env]
+  PORT = "8080"
+  DB_PATH = "/data/app.db"
+
+[[mounts]]
+  source = "data"        # اسم الـ volume (وليس الـ ID)
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_start_machines = true
+  auto_stop_machines = "stop"
+  min_machines_running = 1
+  processes = ["app"]
