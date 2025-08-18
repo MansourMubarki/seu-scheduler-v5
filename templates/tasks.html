@@ -1,27 +1,149 @@
-{% extends "base.html" %}{% block content %}
-<h2>مهامي</h2>
+{% extends "base.html" %}
+{% block content %}
+<h2 class="mb-3">مهامي</h2>
+
 <form class="card p-3" method="post" action="{{ url_for('tasks_create') }}">
   <div class="row g-2">
-    <div class="col-md-3"><label class="form-label">العنوان</label><input name="title" class="form-control" required></div>
-    <div class="col-md-2"><label class="form-label">النوع</label><select name="kind" class="form-select"><option>واجب</option><option>كويز</option><option>مشروع</option><option>أخرى</option></select></div>
-    <div class="col-md-3"><label class="form-label">المادة (اختياري)</label><select name="course_id" class="form-select"><option value="">—</option>{% for c in courses %}<option value="{{ c.id }}">{{ c.title }}</option>{% endfor %}</select></div>
-    <div class="col-md-2"><label class="form-label">تاريخ الاستحقاق</label><input type="date" name="due_date" class="form-control" required></div>
-    <div class="col-md-2"><label class="form-label">الوقت (اختياري)</label><input type="time" name="due_time" class="form-control"></div>
-    <div class="col-md-2"><label class="form-label">تنبيه قبل (دقائق)</label><input type="number" name="remind_minutes" class="form-control" value="30" min="0" step="5"></div>
-    <div class="col-12"><label class="form-label">ملاحظات</label><textarea name="notes" class="form-control" rows="2"></textarea></div>
-    <div class="col-12 mt-2"><button class="btn btn-primary">إضافة مهمة</button><a class="btn btn-outline-success" href="{{ url_for('download_calendar') }}">تصدير للتقويم (.ics)</a></div>
+    <div class="col-md-3">
+      <label class="form-label">العنوان</label>
+      <input name="title" class="form-control" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">النوع</label>
+      <select name="kind" class="form-select">
+        <option>واجب</option><option>كويز</option><option>مشروع</option><option>أخرى</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">المادة (اختياري)</label>
+      <select name="course_id" class="form-select">
+        <option value="">—</option>
+        {% for c in courses %}
+          <option value="{{ c.id }}">{{ c.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">تاريخ الاستحقاق</label>
+      <input type="date" name="due_date" class="form-control" required>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">الوقت (اختياري)</label>
+      <input type="time" name="due_time" class="form-control">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">تنبيه قبل (دقائق)</label>
+      <input type="number" name="remind_minutes" class="form-control" value="30" min="0" step="5">
+    </div>
+    <div class="col-12">
+      <label class="form-label">ملاحظات</label>
+      <textarea name="notes" class="form-control" rows="2"></textarea>
+    </div>
+    <div class="col-12 mt-2 d-flex gap-2">
+      <button class="btn btn-primary">إضافة مهمة</button>
+      <a class="btn btn-outline-success" href="{{ url_for('download_calendar') }}">تصدير تقويم الجدول (.ics)</a>
+      <a class="btn btn-outline-success" href="{{ url_for('download_tasks_calendar') }}">تصدير تقويم المهام (.ics)</a>
+      <button type="button" id="btn-print" class="btn btn-secondary">طباعة</button>
+      <button type="button" id="btn-png" class="btn btn-outline-primary">PNG</button>
+      <button type="button" id="btn-jpg" class="btn btn-outline-primary">JPG</button>
+      <button type="button" id="btn-pdf" class="btn btn-outline-dark">PDF</button>
+    </div>
   </div>
 </form>
-<table class="table mt-3">
-  <thead><tr><th>#</th><th>العنوان</th><th>النوع</th><th>المادة</th><th>التاريخ</th><th>الوقت</th><th>تنبيه</th><th></th></tr></thead>
-  <tbody>{% for t in tasks %}
-    <tr>
-      <td>{{ t.id }}</td><td>{{ t.title }}</td><td>{{ t.kind }}</td>
-      <td>{{ (t.course_id and courses|selectattr('id','equalto',t.course_id)|first.title) or '—' }}</td>
-      <td>{{ t.due_date }}</td><td>{{ t.due_time or '—' }}</td><td>{{ t.remind_minutes }} د</td>
-      <td><form method="post" action="{{ url_for('tasks_delete', tid=t.id) }}" onsubmit="return confirm('حذف المهمة؟');">
-        <button class="btn btn-sm btn-danger">حذف</button></form></td>
-    </tr>{% endfor %}
-  </tbody>
-</table>
+
+<div id="capture-tasks" class="card p-3 mt-3">
+  <h5 class="mb-2">قائمة المهام</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>العنوان</th><th>النوع</th><th>المادة</th>
+          <th>التاريخ</th><th>الوقت</th><th>تنبيه</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tasks %}
+          {% set c = (courses|selectattr('id','equalto',t.course_id)|first) if t.course_id else None %}
+          <tr>
+            <td>{{ t.id }}</td>
+            <td class="text-start">{{ t.title }}</td>
+            <td>{{ t.kind or 'أخرى' }}</td>
+            <td>{{ c.title if c else '—' }}</td>
+            <td>{{ t.due_date }}</td>
+            <td>{{ t.due_time or '—' }}</td>
+            <td>{{ (t.remind_minutes or 0) }} د</td>
+            <td>
+              <form method="post" action="{{ url_for('tasks_delete', tid=t.id) }}" onsubmit="return confirm('حذف المهمة؟');">
+                <button class="btn btn-sm btn-danger">حذف</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="8" class="text-muted">لا توجد مهام بعد.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+// تصدير بالعرض + منع القص
+(async function(){
+  const el = document.getElementById('capture-tasks');
+
+  function toCanvas(node){ 
+    return html2canvas(node, {
+      scale: 2, backgroundColor: '#fff',
+      windowWidth: node.scrollWidth, windowHeight: node.scrollHeight,
+      useCORS: true
+    });
+  }
+
+  document.getElementById('btn-print').onclick = ()=> window.print();
+
+  document.getElementById('btn-png').onclick = async ()=>{
+    const c = await toCanvas(el);
+    const a = document.createElement('a');
+    a.download = 'tasks.png';
+    a.href = c.toDataURL('image/png');
+    a.click();
+  };
+
+  document.getElementById('btn-jpg').onclick = async ()=>{
+    const c = await toCanvas(el);
+    const a = document.createElement('a');
+    a.download = 'tasks.jpg';
+    a.href = c.toDataURL('image/jpeg', 0.95);
+    a.click();
+  };
+
+  document.getElementById('btn-pdf').onclick = async ()=>{
+    const { jsPDF } = window.jspdf;
+    const c = await toCanvas(el);
+    const img = c.toDataURL('image/jpeg', 0.95);
+
+    const pdf = new jsPDF('l','mm','a4'); // landscape
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    const iw = pw - 20, ih = c.height * iw / c.width; // هوامش 10مم
+
+    // لو أطول من صفحة، نضغطها على صفحة واحدة (لمنع القص)
+    pdf.addImage(img,'JPEG',10,10,iw, Math.min(ih, ph-20), '', 'FAST');
+    pdf.save('tasks.pdf');
+  };
+})();
+</script>
+<style>
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  body * { visibility: hidden !important; }
+  #capture-tasks, #capture-tasks * { visibility: visible !important; }
+  #capture-tasks { position: absolute; left: 0; top: 0; width: 100%; }
+}
+</style>
 {% endblock %}
