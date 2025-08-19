@@ -86,19 +86,6 @@
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-  const src = document.getElementById('capture-tasks');
-  if (src && !document.getElementById('capture')) {
-    const dup = src.cloneNode(true);
-    dup.id = 'capture';
-    dup.style.visibility = 'hidden';
-    dup.style.position = 'static';
-    dup.style.height = src.scrollHeight + 'px';
-    document.body.appendChild(dup);
-  }
-});
-</script>
 <script src="{{ url_for('static', filename='js/export.js') }}?v=26"></script>
 
 {% endblock %}

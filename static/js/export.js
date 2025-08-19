@@ -6,9 +6,11 @@
   const MIN_TABLE_WIDTH = window.EXPORT_MIN_WIDTH || 1260; // 7 أيام × 180px
 
   function getSource() {
-    const src = document.getElementById("capture");
-    if (!src) throw new Error("لم يتم العثور على #capture");
-    return src;
+    const a = document.getElementById("capture");
+    if (a) return a;
+    const b = document.getElementById("capture-tasks");
+    if (b) return b;
+    throw new Error("لم يتم العثور على #capture أو #capture-tasks");
   }
 
   function ensureWorkspace() {
@@ -200,6 +202,7 @@
   }
 
   window.addEventListener("DOMContentLoaded", ()=>{
+    bind("btnPRINT", async ()=>{ window.print(); });
     bind("btnPNG", async (canvas)=>{
       if (canvas.toBlob) canvas.toBlob(b=>downloadBlob("SEU-schedule.png", b), "image/png", 1.0);
       else {
