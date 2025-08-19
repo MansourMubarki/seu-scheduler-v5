@@ -359,10 +359,11 @@ def download_calendar():
         "الاثنين":"MO","الثلاثاء":"TU","الأربعاء":"WE","الاربعاء":"WE","الخميس":"TH","الجمعة":"FR","السبت":"SA",
     }
     def esc(s):
-        return (s or "").replace(",", r"\,").replace(";", r"\;").replace("\n", r"\n")
-    lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN"]
+        return (s or "").replace(",", r"\,").replace(";", r"\;").replace("
+", r"
+")
+    lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"]
     today = datetime.now().strftime("%Y%m%d")
-    # weekly courses
     for c in Course.query.filter_by(user_id=user.id):
         byday = DAY_AR2BYDAY.get(c.day)
         if not byday:
@@ -374,51 +375,41 @@ def download_calendar():
             f"DTSTART;TZID={tzid}:{today}{c.start.replace(':','')}00",
             f"DTEND;TZID={tzid}:{today}{c.end.replace(':','')}00",
             f"RRULE:FREQ=WEEKLY;BYDAY={byday}",
+            "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:تذكير بالمحاضرة","TRIGGER:-PT15M","END:VALARM",
             "END:VEVENT"
         ]
-    # exams with alarm
     for e in Exam.query.filter_by(user_id=user.id):
         start = f"{e.date.replace('-','')}T{(e.start or '09:00').replace(':','')}00"
         end   = f"{e.date.replace('-','')}T{(e.end or '10:00').replace(':','')}00"
         lines += [
             "BEGIN:VEVENT",
             f"UID:exam-{e.id}@seu-scheduler",
-            f"SUMMARY:{esc('اختبار: ' + e.title)}",
+            f"SUMMARY:اختبار — {esc(e.kind or '')} ({esc(e.course_title or '')})",
             f"DTSTART;TZID={tzid}:{start}",
             f"DTEND;TZID={tzid}:{end}",
             "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:تذكير بالاختبار","TRIGGER:-PT30M","END:VALARM",
             "END:VEVENT"
         ]
-    # tasks with custom alarm
-    for t in Task.query.filter_by(user_id=user.id):
-        due_t = (t.due_time or "17:00").replace(":","")
-        start = f"{t.due_date.replace('-','')}T{due_t}00"
-        trig = f"-PT{max(0, t.remind_minutes)}M"
-        lines += [
-            "BEGIN:VEVENT",
-            f"UID:task-{t.id}@seu-scheduler",
-            f"SUMMARY:{esc(f'{t.kind}: {t.title}')}",
-            f"DTSTART;TZID={tzid}:{start}",
-            f"DTEND;TZID={tzid}:{start}",
-            "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:تذكير بالمهمة",f"TRIGGER:{trig}","END:VALARM",
-            "END:VEVENT"
-        ]
-    lines += ["END:VCALENDAR"]
-    ics = "\r\n".join(lines) + "\r\n"
-    return (ics, 200, {"Content-Type":"text/calendar; charset=utf-8","Content-Disposition":"attachment; filename=seu-schedule.ics"})
-
-
+    ics = "
+".join(lines) + "
+"
+    from flask import Response
+    resp = Response(ics)
+    resp.headers["Content-Type"] = "text/calendar; charset=utf-8"
+    resp.headers["Content-Disposition"] = "attachment; filename=seu-schedule.ics"
+    return resp
 
 
 @app.get("/tasks.ics")
 @login_required
 def download_tasks_calendar():
-    """ICS خاص بالمهام فقط (بدون محاضرات أو اختبارات)، مع تنبيه قبل الموعد."""
     user = current_user()
     tzid = "Asia/Riyadh"
     def esc(s):
-        return (s or "").replace(",", r"\,").replace(";", r"\;").replace("\n", r"\n")
-    lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN"]
+        return (s or "").replace(",", r"\,").replace(";", r"\;").replace("
+", r"
+")
+    lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"]
     for t in Task.query.filter_by(user_id=user.id).order_by(Task.due_date.asc()).all():
         due_t = (t.due_time or "17:00").replace(":","")
         start = f"{t.due_date.replace('-','')}T{due_t}00"
@@ -432,10 +423,16 @@ def download_tasks_calendar():
             "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:تذكير بالمهمة",f"TRIGGER:{trig}","END:VALARM",
             "END:VEVENT"
         ]
-    lines += ["END:VCALENDAR"]
-    ics = "\r\n".join(lines) + "\r\n"
-    return (ics, 200, {"Content-Type":"text/calendar; charset=utf-8",
-                       "Content-Disposition":"attachment; filename=tasks.ics"})
+    ics = "
+".join(lines) + "
+"
+    from flask import Response
+    resp = Response(ics)
+    resp.headers["Content-Type"] = "text/calendar; charset=utf-8"
+    resp.headers["Content-Disposition"] = "attachment; filename=tasks.ics"
+    return resp
+
+
 @app.get("/tasks")
 @login_required
 def tasks_page():
