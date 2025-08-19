@@ -185,7 +185,7 @@
 
   // PNG
   document.getElementById('btn-png').addEventListener('click', async () => {
-    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff' });
+    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff', windowWidth: captureEl.scrollWidth, windowHeight: captureEl.scrollHeight });
     const link = document.createElement('a');
     link.download = 'schedule.png';
     link.href = canvas.toDataURL('image/png');
@@ -194,7 +194,7 @@
 
   // JPG
   document.getElementById('btn-jpg').addEventListener('click', async () => {
-    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff' });
+    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff', windowWidth: captureEl.scrollWidth, windowHeight: captureEl.scrollHeight });
     const link = document.createElement('a');
     link.download = 'schedule.jpg';
     link.href = canvas.toDataURL('image/jpeg', 0.95);
@@ -204,21 +204,19 @@
   // PDF
   document.getElementById('btn-pdf').addEventListener('click', async () => {
     const { jsPDF } = window.jspdf;
-    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff' });
+    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff', windowWidth: captureEl.scrollWidth, windowHeight: captureEl.scrollHeight });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdf = new jsPDF('l', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    // مقاس الصورة
-    const imgWidth = pageWidth - 20; // هوامش
-    const imgHeight = canvas.height * imgWidth / canvas.width;
-    let y = 10;
-    if (imgHeight > pageHeight - 20) {
-      // لو طويلة جدًا — نضغطها صفحة وحدة
-      pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, pageHeight - 20, '', 'FAST');
-    } else {
-      pdf.addImage(imgData, 'JPEG', 10, y, imgWidth, imgHeight, '', 'FAST');
-    }
+    const margin = 10;
+    const maxW = pageWidth - margin*2;
+    const maxH = pageHeight - margin*2;
+    const ratio = canvas.height / canvas.width;
+    let drawW = maxW, drawH = drawW * ratio;
+    if (drawH > maxH) { drawH = maxH; drawW = drawH / ratio; }
+    const x = (pageWidth - drawW)/2, y = (pageHeight - drawH)/2;
+    pdf.addImage(imgData, 'JPEG', x, y, drawW, drawH, '', 'FAST');
     pdf.save('schedule.pdf');
   });
 
@@ -244,6 +242,7 @@
 
 <style>
 /* طباعة: التقط عنصر #capture فقط */
+@page { size: A4 landscape; margin: 10mm; }
 @media print {
   body * { visibility: hidden !important; }
   #capture, #capture * { visibility: visible !important; }

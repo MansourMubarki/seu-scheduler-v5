@@ -408,6 +408,34 @@ def download_calendar():
     return (ics, 200, {"Content-Type":"text/calendar; charset=utf-8","Content-Disposition":"attachment; filename=seu-schedule.ics"})
 
 
+
+
+@app.get("/tasks.ics")
+@login_required
+def download_tasks_calendar():
+    """ICS خاص بالمهام فقط (بدون محاضرات أو اختبارات)، مع تنبيه قبل الموعد."""
+    user = current_user()
+    tzid = "Asia/Riyadh"
+    def esc(s):
+        return (s or "").replace(",", r"\,").replace(";", r"\;").replace("\n", r"\n")
+    lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN"]
+    for t in Task.query.filter_by(user_id=user.id).order_by(Task.due_date.asc()).all():
+        due_t = (t.due_time or "17:00").replace(":","")
+        start = f"{t.due_date.replace('-','')}T{due_t}00"
+        trig = f"-PT{max(0, int(t.remind_minutes or 0))}M"
+        lines += [
+            "BEGIN:VEVENT",
+            f"UID:task-{t.id}@seu-scheduler",
+            f"SUMMARY:{esc((t.kind or 'مهمة') + ': ' + (t.title or ''))}",
+            f"DTSTART;TZID={tzid}:{start}",
+            f"DTEND;TZID={tzid}:{start}",
+            "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:تذكير بالمهمة",f"TRIGGER:{trig}","END:VALARM",
+            "END:VEVENT"
+        ]
+    lines += ["END:VCALENDAR"]
+    ics = "\r\n".join(lines) + "\r\n"
+    return (ics, 200, {"Content-Type":"text/calendar; charset=utf-8",
+                       "Content-Disposition":"attachment; filename=tasks.ics"})
 @app.get("/tasks")
 @login_required
 def tasks_page():
