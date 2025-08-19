@@ -359,8 +359,7 @@ def download_calendar():
         "الاثنين":"MO","الثلاثاء":"TU","الأربعاء":"WE","الاربعاء":"WE","الخميس":"TH","الجمعة":"FR","السبت":"SA",
     }
     def esc(s):
-        return (s or "").replace(",", "\,").replace(";", "\;").replace("
-", "\n")
+        return (s or "").replace(",", r"\\,").replace(";", r"\\;").replace("\n", r"\\n")
     lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"]
     today = datetime.now().strftime("%Y%m%d")
     for c in Course.query.filter_by(user_id=user.id):
@@ -389,9 +388,7 @@ def download_calendar():
             "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:تذكير بالاختبار","TRIGGER:-PT30M","END:VALARM",
             "END:VEVENT"
         ]
-    ics = "
-".join(lines) + "
-"
+    ics = "\r\n".join(lines) + "\r\n"
     from flask import Response
     resp = Response(ics)
     resp.headers["Content-Type"] = "text/calendar; charset=utf-8"
@@ -405,8 +402,7 @@ def download_tasks_calendar():
     user = current_user()
     tzid = "Asia/Riyadh"
     def esc(s):
-        return (s or "").replace(",", "\,").replace(";", "\;").replace("
-", "\n")
+        return (s or "").replace(",", r"\\,").replace(";", r"\\;").replace("\n", r"\\n")
     lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"]
     for t in Task.query.filter_by(user_id=user.id).order_by(Task.due_date.asc()).all():
         due_t = (t.due_time or "17:00").replace(":","")
@@ -421,9 +417,7 @@ def download_tasks_calendar():
             "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:تذكير بالمهمة",f"TRIGGER:{trig}","END:VALARM",
             "END:VEVENT"
         ]
-    ics = "
-".join(lines) + "
-"
+    ics = "\r\n".join(lines) + "\r\n"
     from flask import Response
     resp = Response(ics)
     resp.headers["Content-Type"] = "text/calendar; charset=utf-8"
