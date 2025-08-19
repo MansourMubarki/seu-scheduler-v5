@@ -48,3 +48,6 @@ if app is None:
     @app.get('/')
     def _boot_error():
         return "WSGI failed to locate your Flask app. Ensure you expose 'app' or 'create_app' in app.py.", 500
+
+# Alias for hosts expecting 'application'
+application = app

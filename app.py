@@ -359,9 +359,8 @@ def download_calendar():
         "الاثنين":"MO","الثلاثاء":"TU","الأربعاء":"WE","الاربعاء":"WE","الخميس":"TH","الجمعة":"FR","السبت":"SA",
     }
     def esc(s):
-        return (s or "").replace(",", r"\,").replace(";", r"\;").replace("
-", r"
-")
+        return (s or "").replace(",", "\,").replace(";", "\;").replace("
+", "\n")
     lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"]
     today = datetime.now().strftime("%Y%m%d")
     for c in Course.query.filter_by(user_id=user.id):
@@ -379,8 +378,8 @@ def download_calendar():
             "END:VEVENT"
         ]
     for e in Exam.query.filter_by(user_id=user.id):
-        start = f"{e.date.replace('-','')}T{(e.start or '09:00').replace(':','')}00"
-        end   = f"{e.date.replace('-','')}T{(e.end or '10:00').replace(':','')}00"
+        start = f"{e.date.replace('-', '')}T{(e.start or '09:00').replace(':','')}00"
+        end   = f"{e.date.replace('-', '')}T{(e.end or '10:00').replace(':','')}00"
         lines += [
             "BEGIN:VEVENT",
             f"UID:exam-{e.id}@seu-scheduler",
@@ -406,13 +405,12 @@ def download_tasks_calendar():
     user = current_user()
     tzid = "Asia/Riyadh"
     def esc(s):
-        return (s or "").replace(",", r"\,").replace(";", r"\;").replace("
-", r"
-")
+        return (s or "").replace(",", "\,").replace(";", "\;").replace("
+", "\n")
     lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//seu-scheduler//ar//EN","CALSCALE:GREGORIAN","METHOD:PUBLISH"]
     for t in Task.query.filter_by(user_id=user.id).order_by(Task.due_date.asc()).all():
         due_t = (t.due_time or "17:00").replace(":","")
-        start = f"{t.due_date.replace('-','')}T{due_t}00"
+        start = f"{t.due_date.replace('-', '')}T{due_t}00"
         trig = f"-PT{max(0, int(t.remind_minutes or 0))}M"
         lines += [
             "BEGIN:VEVENT",
