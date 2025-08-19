@@ -44,9 +44,9 @@
       <a class="btn btn-outline-success" href="{{ url_for('download_calendar') }}">تصدير تقويم الجدول (.ics)</a>
       <a class="btn btn-outline-success" href="{{ url_for('download_tasks_calendar') }}">تصدير تقويم المهام (.ics)</a>
       <button type="button" id="btn-print" class="btn btn-secondary">طباعة</button>
-      <button type="button" id="btn-png" class="btn btn-outline-primary">PNG</button>
-      <button type="button" id="btn-jpg" class="btn btn-outline-primary">JPG</button>
-      <button type="button" id="btn-pdf" class="btn btn-outline-dark">PDF</button>
+      <button type="button" id="btnPNG" class="btn btn-outline-primary">PNG</button>
+      <button type="button" id="btnJPG" class="btn btn-outline-primary">JPG</button>
+      <button type="button" id="btnPDF" class="btn btn-outline-dark">PDF</button>
     </div>
   </div>
 </form>
@@ -85,6 +85,22 @@
     </table>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const src = document.getElementById('capture-tasks');
+  if (src && !document.getElementById('capture')) {
+    const dup = src.cloneNode(true);
+    dup.id = 'capture';
+    dup.style.visibility = 'hidden';
+    dup.style.position = 'static';
+    dup.style.height = src.scrollHeight + 'px';
+    document.body.appendChild(dup);
+  }
+});
+</script>
+<script src="{{ url_for('static', filename='js/export.js') }}?v=26"></script>
+
 {% endblock %}
 
 {% block scripts %}

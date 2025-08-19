@@ -82,9 +82,9 @@
       <a class="btn btn-outline-success" href="{{ url_for('download_calendar') }}">تنزيل التقويم (.ics)</a>
       <a class="btn btn-outline-secondary" href="{{ url_for('tasks_page') }}">مهامي</a>
       <button id="btn-print" class="btn btn-primary">🖨️ طباعة</button>
-      <button id="btn-png" class="btn btn-outline-primary">📷 PNG</button>
-      <button id="btn-jpg" class="btn btn-outline-primary">🖼️ JPG</button>
-      <button id="btn-pdf" class="btn btn-outline-dark">📄 PDF</button>
+      <button id="btnPNG" class="btn btn-outline-primary">📷 PNG</button>
+      <button id="btnJPG" class="btn btn-outline-primary">🖼️ JPG</button>
+      <button id="btnPDF" class="btn btn-outline-dark">📄 PDF</button>
     </div>
 
     <!-- منطقة الالتقاط -->
@@ -168,6 +168,11 @@
     </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/export.js') }}?v=26"></script>
+
 {% endblock %}
 
 {% block scripts %}
@@ -178,49 +183,6 @@
 
 <script>
 (() => {
-  const captureEl = document.getElementById('capture');
-
-  // طباعة
-  document.getElementById('btn-print').addEventListener('click', () => window.print());
-
-  // PNG
-  document.getElementById('btn-png').addEventListener('click', async () => {
-    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff', windowWidth: captureEl.scrollWidth, windowHeight: captureEl.scrollHeight });
-    const link = document.createElement('a');
-    link.download = 'schedule.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  });
-
-  // JPG
-  document.getElementById('btn-jpg').addEventListener('click', async () => {
-    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff', windowWidth: captureEl.scrollWidth, windowHeight: captureEl.scrollHeight });
-    const link = document.createElement('a');
-    link.download = 'schedule.jpg';
-    link.href = canvas.toDataURL('image/jpeg', 0.95);
-    link.click();
-  });
-
-  // PDF
-  document.getElementById('btn-pdf').addEventListener('click', async () => {
-    const { jsPDF } = window.jspdf;
-    const canvas = await html2canvas(captureEl, { scale: 2, backgroundColor: '#fff', windowWidth: captureEl.scrollWidth, windowHeight: captureEl.scrollHeight });
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const pdf = new jsPDF('l', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 10;
-    const maxW = pageWidth - margin*2;
-    const maxH = pageHeight - margin*2;
-    const ratio = canvas.height / canvas.width;
-    let drawW = maxW, drawH = drawW * ratio;
-    if (drawH > maxH) { drawH = maxH; drawW = drawH / ratio; }
-    const x = (pageWidth - drawW)/2, y = (pageHeight - drawH)/2;
-    pdf.addImage(imgData, 'JPEG', x, y, drawW, drawH, '', 'FAST');
-    pdf.save('schedule.pdf');
-  });
-
-  // رسم الدونات (ساعات)
   fetch('{{ url_for("stats_json") }}')
     .then(r => r.json())
     .then(d => {

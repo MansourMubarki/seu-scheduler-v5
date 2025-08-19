@@ -1,9 +1,9 @@
-// export.js v24 — تصدير بدون قص للجوال واللاب (Plan A: html-to-image, Plan B: html2canvas)
+// export.js v26 — تصدير بدون قص للجوال واللاب (Plan A: html-to-image, Plan B: html2canvas)
 // يعالج: مساحة العمل، انتظار الخطوط، overflow، عرض 7 أعمدة كامل.
 (function () {
-  const BG = "#FFFFFF";
+  const BG = window.EXPORT_BG || "#FFFFFF";
   const SCALE = Math.max(2, Math.min(3, window.devicePixelRatio || 2));
-  const MIN_TABLE_WIDTH = 1260; // 7 أيام × 180px
+  const MIN_TABLE_WIDTH = window.EXPORT_MIN_WIDTH || 1260; // 7 أيام × 180px
 
   function getSource() {
     const src = document.getElementById("capture");
